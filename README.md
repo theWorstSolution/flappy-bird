@@ -30,7 +30,7 @@ Xem di chuyển lên xuống bằng phím trong hàm updateMove của src/Ship.j
 
 Code quỹ đạo đường đi cho quân địch: 
 
-![Alt text](overlap-1.jpg)
+![](overlap.jpg)
 
 Nếu phi thuyền xuất hiện bên phải(trái) thì di chuyển sang trái(phải) giữa màn hình, rồi sang phải(trái) cuối màn hình 
 
