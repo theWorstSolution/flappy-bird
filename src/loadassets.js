@@ -1,0 +1,1 @@
+var gameResources = ["assets/background.png", "assets/bird.png"];
