@@ -1,6 +1,6 @@
 var v;
 var gravity = -0.35;
-var thrust;
+var touchSpeed = 6;
 var score = 0;
 var scoreLabel;
 var pipeSpeed = 2;
@@ -13,17 +13,23 @@ var dash = false;
 var dashDuration = 1;
 var dashTimer = 0;
 var dashCoolDown = 0;
+var dashCoolDownMax = 10;
 
 var power = false;
 var powerDuration = 5;
 var powerTimer = 0;
 var powerCoolDown = 0;
+var powerCoolDownMax = 30;
+
+var INACTIVE_STATE = 0;
+var ACTIVE_STATE = 1;
 
 var pause = false;
 
 var menu = new cc.Menu();
 
 var medalDisplay = new cc.Sprite("assets/bronze-medal.png");
+
 var gameScene = cc.Scene.extend({
 onEnter:function () {
     this._super();
@@ -46,7 +52,7 @@ init:function () {
                 // Đây là nơi bạn có thể thực hiện hành động cụ thể khi người dùng bấm phím X
                 if(powerCoolDown <=0){
                     power = true;
-                    powerCoolDown = 30;
+                    powerCoolDown = powerCoolDownMax;
                     powerTimer = 0;
                 }
             }
@@ -60,7 +66,7 @@ init:function () {
                 console.log("dash");
                 if(dashCoolDown <= 0) {
                     dash = true;
-                    dashCoolDown = 10;
+                    dashCoolDown = dashCoolDownMax;
 
                 }
             }
@@ -73,12 +79,12 @@ init:function () {
             if(touchDisabled){
                 return false;
             }
-            if(ship.state == 0){
+            if(ship.state == INACTIVE_STATE){
                 dashCoolDown = 0;
                 powerCoolDown = 0;
                 power = false;
                 powerTimer = 100;
-                ship.state = 1;
+                ship.state = ACTIVE_STATE;
                 startLabel.setVisible(false);
                 scoreLabel.setVisible(true);
                 gameOverLabel.setVisible(false);
@@ -87,7 +93,7 @@ init:function () {
                     gameLayer.addPipe()
                 }, 1000);
             }
-            ship.ySpeed = 6;
+            ship.ySpeed = touchSpeed;
             cc.audioEngine.playEffect("assets/jump.wav");
             return true;
         }
@@ -110,9 +116,9 @@ init:function () {
 
     scoreLabel = new cc.LabelTTF("Score: " + score, "Arial", 24);
     scoreLabel.setPosition(cc.winSize.width / 2, cc.winSize.height - 30);
-    this.addChild(scoreLabel, 3);
+    this.addChild(scoreLabel, 2);
 
-    this.addChild(gameOverLabel, 3);
+    this.addChild(gameOverLabel, 2);
     gameOverLabel.setVisible(false);
 
     cc.audioEngine.preloadEffect("assets/jump.wav");
@@ -150,21 +156,21 @@ init:function () {
     menu = new cc.Menu(pauseButton);
     menu.setPosition(cc.p(50, cc.winSize.height - 50)); // Đặt vị trí của nút pause
 
-    this.addChild(menu, 1);
+    this.addChild(menu, 2);
 
     this.progressBar = new cc.Sprite("assets/dash_cooldown.png");
     this.progressTimer = new cc.ProgressTimer(this.progressBar);
     this.progressTimer.type = cc.ProgressTimer.TYPE_BAR; // Loại tiến trình dạng thanh
     this.progressTimer.percentage = 100; // Tiến trình ban đầu là 0%
     this.progressTimer.setPosition(cc.p(cc.winSize.width-30, cc.winSize.height-30)); // Đặt vị trí x, y tùy ý
-    this.addChild(this.progressTimer,1);
+    this.addChild(this.progressTimer,2);
 
     this.progressBar1 = new cc.Sprite("assets/power_cooldown.png");
     this.progressTimer1 = new cc.ProgressTimer(this.progressBar1);
     this.progressTimer1.type = cc.ProgressTimer.TYPE_BAR; // Loại tiến trình dạng thanh
     this.progressTimer1.percentage = 100; // Tiến trình ban đầu là 0%
     this.progressTimer1.setPosition(cc.p(cc.winSize.width-30, cc.winSize.height-50)); // Đặt vị trí x, y tùy ý
-    this.addChild(this.progressTimer1,1);
+    this.addChild(this.progressTimer1,2);
 },
 update:function(dt){
     if(pause == true)
@@ -188,11 +194,11 @@ update:function(dt){
     if(powerCoolDown > 0){
         powerCoolDown -= dt;
     }
-    this.progressTimer.setPercentage((1 - dashCoolDown/10)*100); // Đặt tiến trình là 50%
-    this.progressTimer1.setPercentage((1 - powerCoolDown/30)*100);
+    this.progressTimer.setPercentage((1 - dashCoolDown/dashCoolDownMax)*100); // Đặt tiến trình là 50%
+    this.progressTimer1.setPercentage((1 - powerCoolDown/powerCoolDownMax)*100);
 },
     addPipe:function(event){
-        if(ship.state == 0 || pause == true){
+        if(ship.state == INACTIVE_STATE || pause == true){
             return;
         }
             var randWait = Math.random() * 500;
@@ -209,7 +215,7 @@ update:function(dt){
         this.removeChild(pipe);
     },
     restartGame:function () {
-        ship.state = 0;
+        ship.state = INACTIVE_STATE;
         ship.y = 160;
 
         gameOverLabel = new cc.LabelTTF("Game Over\nScore: " + score, "Arial", 36);
@@ -251,10 +257,8 @@ update:function(dt){
                 "assets/pause.png", // Hình ảnh khi trạng thái bình thường
                 "assets/pause.png",
                 "assets/pause.png",
-                // Hình ảnh khi trạng thái được chọn
                 ()=>this.pauseGame(),
-                this// Hàm gọi khi nút pause được nhấn
-
+                this
             );
             pauseButton.setScale(0.05);
             menu.addChild(pauseButton);
@@ -272,9 +276,7 @@ update:function(dt){
                 "assets/resume.png",
                 "assets/resume.png",
                 ()=>this.pauseGame(),
-                this// Hình ảnh khi trạng thái được chọn
-                // Hàm gọi khi nút pause được nhấn
-
+                this
             );
 
 
@@ -282,15 +284,6 @@ update:function(dt){
             menu.addChild(resumeButton);
         }
 
-
-        // menu.removeAllChildren();
-        // menu.addChild(resumeButton,1);
-    },
-    resumeGame: function () {
-        // Tiếp tục tất cả các hẹn giờ và hành động
-        pause = false;
-        // menu.removeAllChildren();
-        // menu.addChild(pauseButton,1);
     },
     resumeButton: null
 });
@@ -343,7 +336,7 @@ onEnter:function() {
     this.setPosition(60,160);
 },
 updateY:function(dt) {
-    if(ship.state == 0 || pause == true || dash == true){
+    if(ship.state == INACTIVE_STATE || pause == true || dash == true){
         return;
     }
     this.ySpeed += gravity;
