@@ -151,6 +151,20 @@ init:function () {
     menu.setPosition(cc.p(50, cc.winSize.height - 50)); // Đặt vị trí của nút pause
 
     this.addChild(menu, 1);
+
+    this.progressBar = new cc.Sprite("assets/dash_cooldown.png");
+    this.progressTimer = new cc.ProgressTimer(this.progressBar);
+    this.progressTimer.type = cc.ProgressTimer.TYPE_BAR; // Loại tiến trình dạng thanh
+    this.progressTimer.percentage = 100; // Tiến trình ban đầu là 0%
+    this.progressTimer.setPosition(cc.p(cc.winSize.width-30, cc.winSize.height-30)); // Đặt vị trí x, y tùy ý
+    this.addChild(this.progressTimer,1);
+
+    this.progressBar1 = new cc.Sprite("assets/power_cooldown.png");
+    this.progressTimer1 = new cc.ProgressTimer(this.progressBar1);
+    this.progressTimer1.type = cc.ProgressTimer.TYPE_BAR; // Loại tiến trình dạng thanh
+    this.progressTimer1.percentage = 100; // Tiến trình ban đầu là 0%
+    this.progressTimer1.setPosition(cc.p(cc.winSize.width-30, cc.winSize.height-50)); // Đặt vị trí x, y tùy ý
+    this.addChild(this.progressTimer1,1);
 },
 update:function(dt){
     if(pause == true)
@@ -174,6 +188,8 @@ update:function(dt){
     if(powerCoolDown > 0){
         powerCoolDown -= dt;
     }
+    this.progressTimer.setPercentage((1 - dashCoolDown/10)*100); // Đặt tiến trình là 50%
+    this.progressTimer1.setPercentage((1 - powerCoolDown/30)*100);
 },
     addPipe:function(event){
         if(ship.state == 0 || pause == true){
@@ -327,7 +343,7 @@ onEnter:function() {
     this.setPosition(60,160);
 },
 updateY:function(dt) {
-    if(ship.state == 0 || pause == true){
+    if(ship.state == 0 || pause == true || dash == true){
         return;
     }
     this.ySpeed += gravity;
